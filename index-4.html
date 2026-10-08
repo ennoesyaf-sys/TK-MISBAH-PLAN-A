@@ -1,0 +1,736 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>My Pets, My Care – Panduan Mengajar Pre-School</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap">
+<style>
+:root{
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  --bg:#E9EEF8; --fg:#1F2A44; --panel:#FFFFFF; --line:#C9D4EC; --muted:#4A5878;
+  --ink:#1F2A44;
+  --font:'Fredoka','Trebuchet MS','Comic Sans MS',Verdana,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){ --bg:#0B1224; --fg:#EAF0FF; --panel:#16203A; --line:#2C3A5E; --muted:#A9B7D6; }
+}
+:root[data-theme="dark"]{ --bg:#0B1224; --fg:#EAF0FF; --panel:#16203A; --line:#2C3A5E; --muted:#A9B7D6; }
+html{scroll-padding-top:env(safe-area-inset-top,0px);height:100%}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;height:100%;background:var(--bg);color:var(--fg);font-family:var(--font);overflow:hidden}
+[hidden]{display:none!important}
+button{font-family:inherit;cursor:pointer;border:0;color:inherit;background:none;padding:0}
+button:focus-visible,select:focus-visible{outline:4px solid #1F7AE0;outline-offset:3px}
+
+#app{position:relative;width:100%;height:100%;overflow:hidden;background:var(--bg)}
+
+/* ---------- toolbar guru (di luar layar anak) ---------- */
+#bar{position:absolute;top:10px;right:10px;z-index:30;display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;
+  transition:opacity .4s;max-width:calc(100% - 20px)}
+#bar.idle{opacity:.12}
+#bar:hover,#bar:focus-within{opacity:1}
+#bar button,#bar select{height:44px;padding:0 16px;border-radius:22px;background:var(--panel);color:var(--fg);
+  border:2px solid var(--line);font:600 16px/1 var(--font)}
+#bar button[aria-pressed="true"]{background:#1F7AE0;color:#fff;border-color:#1F7AE0}
+
+/* ---------- panggung 16:9 ---------- */
+#stage{position:absolute;left:50%;top:50%;width:1280px;height:720px;transform-origin:center center;
+  background:var(--tint,#EAF3FF);color:var(--ink);font-family:var(--font);overflow:hidden;border-radius:6px;
+  transition:background .35s}
+#slide{position:absolute;inset:0 0 100px 0}
+.slide{position:absolute;inset:0;animation:fadein .25s ease-out}
+@keyframes fadein{from{opacity:0}to{opacity:1}}
+
+/* navigasi bawah */
+#nav{position:absolute;left:0;right:0;bottom:0;height:100px;display:flex;align-items:center;justify-content:center;gap:34px}
+.nb{width:76px;height:76px;border-radius:50%;background:var(--ink);color:#fff;font-size:34px;display:grid;place-items:center;
+  box-shadow:0 5px 0 rgba(31,42,68,.28);transition:transform .12s}
+.nb:active{transform:translateY(3px);box-shadow:0 2px 0 rgba(31,42,68,.28)}
+.nb:disabled{opacity:.25;cursor:default}
+.nb.nudge{background:var(--accent);animation:nudge 1s ease-in-out infinite}
+@keyframes nudge{0%,100%{transform:scale(1)}50%{transform:scale(1.12)}}
+#prog{width:640px}
+#count{font:600 20px/1 var(--font);margin-bottom:9px;text-align:center;color:var(--ink)}
+#segs{display:flex;gap:6px;height:14px}
+.seg{position:relative;height:100%;border-radius:7px;background:rgba(31,42,68,.14);overflow:hidden}
+.seg i{position:absolute;inset:0 auto 0 0;background:var(--sc);border-radius:7px}
+
+/* panel catatan guru */
+#tip{position:absolute;left:36px;right:36px;bottom:108px;z-index:10;background:rgba(21,29,50,.94);color:#fff;
+  border-radius:20px;padding:12px 22px;font-size:22px;line-height:1.35;font-weight:400}
+#tip b{font-weight:700;color:#FFD54A}
+#tip i{font-style:normal;font-weight:600;color:#9BE3F2}
+
+/* ---------- elemen umum ---------- */
+.big{height:92px;padding:0 46px;border-radius:46px;background:var(--ink);color:#fff;font:700 38px/1 var(--font);
+  box-shadow:0 7px 0 rgba(31,42,68,.28);transition:transform .12s}
+.big:active{transform:translateY(4px);box-shadow:0 3px 0 rgba(31,42,68,.28)}
+.spk{width:82px;height:82px;border-radius:50%;background:#fff;border:6px solid var(--accent);font-size:38px;display:grid;place-items:center;flex:none}
+.ph{border:14px solid var(--c);border-radius:46px;background:#fff;overflow:hidden;box-shadow:0 10px 0 rgba(31,42,68,.14);flex:none}
+.ph img{display:block;width:100%;height:100%;object-fit:cover}
+.chip{display:inline-block;padding:10px 26px;border-radius:30px;background:#fff;border:4px solid var(--accent);font:600 30px/1 var(--font)}
+.pop{animation:pop .45s cubic-bezier(.3,1.6,.5,1)}
+@keyframes pop{from{transform:scale(.6);opacity:0}to{transform:scale(1);opacity:1}}
+
+/* sampul */
+.cover .cv-left{position:absolute;left:84px;top:60px;width:560px}
+.cover h1{margin:0;font:700 118px/1.0 var(--font);letter-spacing:-1px}
+.cover .cv-sub{margin:20px 0 24px;font:500 44px/1.2 var(--font)}
+.cover .chips{display:flex;gap:14px;margin-bottom:34px}
+.fan{position:absolute;right:30px;top:50px;width:600px;height:540px}
+.fan .ph{position:absolute;width:230px;height:298px;border-width:12px;border-radius:38px}
+
+/* warm-up */
+.warm .wl{position:absolute;left:84px;top:70px;width:640px}
+.warm h2{margin:0;font:700 120px/1 var(--font)}
+.warm .wq{margin:20px 0 26px;font:600 64px/1.12 var(--font)}
+.warm .answers{display:flex;gap:18px;margin-top:30px;flex-wrap:wrap}
+.warm .answers button{padding:0 30px;height:76px;border-radius:38px;background:#fff;border:5px solid var(--accent);font:600 36px/1 var(--font)}
+.warm .wrow{display:flex;align-items:center;gap:22px}
+.warm .grid{position:absolute;right:70px;top:46px;width:520px;height:540px}
+.warm .grid .ph{position:absolute;width:236px;height:306px;border-width:12px;border-radius:38px}
+
+/* kartu */
+.card .ph{position:absolute;left:84px;top:30px;width:428px;height:546px}
+.card .rt{position:absolute;left:566px;top:40px;width:650px;height:540px}
+.card .q{font:700 92px/1.05 var(--font);margin-top:70px}
+.card .q small{display:block;font:500 34px/1.3 var(--font);margin-top:16px;color:#3D4A68}
+.card .word{font-weight:700;line-height:1.05;white-space:nowrap;margin-top:6px}
+.card .rt .spk{position:absolute;right:0;top:36px}
+.card .rv{padding-top:30px}
+.card .bar{width:150px;height:16px;border-radius:8px;background:var(--accent);margin:12px 0 18px}
+.card .line{font:500 52px/1.15 var(--font);color:#2B3857}
+.card .dots{display:flex;gap:30px;margin-top:26px;min-height:96px}
+.card .dot{display:flex;flex-direction:column;align-items:center;gap:6px}
+.card .dot span:first-child{width:56px;height:56px;border-radius:50%;border:6px solid var(--accent);background:#fff;transition:background .2s,transform .2s}
+.card .dot.on span:first-child{background:var(--accent);transform:scale(1.12)}
+.card .dot span:last-child{font-weight:600;color:#3D4A68}
+.card .stars{position:absolute;right:6px;top:140px;font-size:70px;letter-spacing:6px}
+.card .act{position:absolute;left:0;bottom:6px}
+.peek .ph img{transition:filter .9s ease}
+.peek .ph.blur img{filter:blur(34px) saturate(1.1)}
+.peek .ph{overflow:hidden}
+.count{font:700 230px/1 var(--font);margin-top:10px}
+
+/* kuis */
+.quiz .qrow{position:absolute;left:70px;right:70px;top:18px;height:118px;display:flex;align-items:center;gap:26px}
+.quiz .qrow .ph{width:84px;height:110px;border-width:7px;border-radius:22px;box-shadow:none}
+.quiz .qp{font:700 62px/1.05 var(--font);flex:1;padding-right:90px}
+.quiz .qp.long{font-size:48px}
+.quiz .opts{position:absolute;left:0;right:0;top:152px;display:flex;justify-content:center;gap:42px}
+.opt{position:relative;width:326px;height:432px;border:12px solid var(--c);border-radius:42px;overflow:hidden;background:#fff;
+  box-shadow:0 9px 0 rgba(31,42,68,.14);transition:transform .15s}
+.opt img{display:block;width:100%;height:100%;object-fit:cover;pointer-events:none}
+.opt .num{position:absolute;left:12px;top:12px;width:48px;height:48px;border-radius:50%;background:var(--ink);color:#fff;font:700 28px/48px var(--font);text-align:center}
+.opt .lab{position:absolute;left:0;right:0;bottom:0;padding:10px;background:rgba(255,255,255,.94);font:700 40px/1.1 var(--font);text-align:center}
+.opt.good{border-color:#1E9E57;transform:scale(1.05);box-shadow:0 0 0 10px rgba(30,158,87,.35)}
+.opt.bad{border-color:#F58A2E;animation:shake .45s}
+.quiz.done .opt:not(.good){opacity:.35}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-14px)}40%{transform:translateX(12px)}60%{transform:translateX(-8px)}80%{transform:translateX(6px)}}
+
+/* bagian & penutup */
+.sec .sl{position:absolute;left:84px;top:96px;width:560px}
+.sec .pn{font:600 46px/1 var(--font);color:#3D4A68}
+.sec h2{margin:10px 0 10px;font:700 150px/1 var(--font)}
+.sec .id{font:500 40px/1.2 var(--font);color:#3D4A68;margin-bottom:34px}
+.sec .chips{display:flex;gap:12px;margin-bottom:40px;flex-wrap:wrap}
+.thumbs{position:absolute;right:76px;top:26px;display:grid;grid-template-columns:repeat(3,1fr);gap:14px 20px;width:580px}
+.thumbs .t{display:flex;flex-direction:column;align-items:center;gap:8px}
+.thumbs .ph{width:100%;aspect-ratio:440/570;border-width:9px;border-radius:30px;box-shadow:none}
+.thumbs.small .ph{aspect-ratio:440/380}
+.thumbs .ph.blur img{filter:blur(18px)}
+.thumbs .w{font:600 28px/1 var(--font)}
+.wrap .wl{position:absolute;left:84px;top:80px;width:520px}
+.wrap h2{margin:0 0 16px;font:700 120px/1 var(--font)}
+.wrap p{margin:0 0 34px;font:500 46px/1.2 var(--font)}
+.fin .wl{position:absolute;left:0;right:0;top:46px;text-align:center}
+.fin h2{margin:0;font:700 130px/1 var(--font)}
+.fin .st{font-size:76px;letter-spacing:10px;margin:6px 0}
+.fin .sent{font:600 52px/1.2 var(--font);margin-bottom:10px}
+.fin .row{display:flex;justify-content:center;gap:34px;margin:12px 0 26px}
+.fin .row .ph{width:170px;height:220px;border-width:9px;border-radius:30px;box-shadow:none}
+.fin .btns{display:flex;gap:20px;justify-content:center}
+.fin .btns .big.alt{background:#fff;color:var(--ink);border:5px solid var(--ink)}
+
+/* ---------- toast ---------- */
+#toast{position:absolute;left:50%;bottom:24px;transform:translateX(-50%);z-index:40;background:#1F2A44;color:#fff;padding:14px 22px;border-radius:14px;
+  font:500 18px/1.3 var(--font);max-width:min(90%,640px);text-align:center;box-shadow:0 8px 24px rgba(0,0,0,.35)}
+
+/* ---------- panduan guru ---------- */
+#guide{position:absolute;inset:0;z-index:50;background:var(--bg);color:var(--fg);overflow:auto;-webkit-overflow-scrolling:touch}
+#guide .gi{max-width:1040px;margin:0 auto;padding:68px 24px 80px}
+#guide h1{font:700 40px/1.15 var(--font);margin:0 0 8px}
+#guide h2{font:700 28px/1.2 var(--font);margin:42px 0 12px}
+#guide p,#guide li{font:400 18px/1.55 var(--font);color:var(--fg)}
+#guide .muted{color:var(--muted)}
+#guide .close{position:fixed;top:calc(10px + env(safe-area-inset-top,0px));left:10px;height:44px;padding:0 20px;border-radius:22px;background:#1F7AE0;color:#fff;font:600 16px/1 var(--font);z-index:2}
+#guide .tw{overflow-x:auto;border:2px solid var(--line);border-radius:16px;background:var(--panel)}
+#guide table{border-collapse:collapse;width:100%;min-width:640px}
+#guide th,#guide td{padding:10px 14px;text-align:left;vertical-align:top;border-bottom:1px solid var(--line);font:400 16px/1.45 var(--font)}
+#guide th{font-weight:700;background:rgba(31,122,224,.1)}
+#guide tr:last-child td{border-bottom:0}
+#guide .jump{display:flex;flex-wrap:wrap;gap:10px;margin:14px 0}
+#guide .jump button{height:42px;padding:0 18px;border-radius:21px;background:var(--panel);border:2px solid var(--line);font:600 16px/1 var(--font);color:var(--fg)}
+#guide .routine{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+#guide .routine div{background:var(--panel);border:2px solid var(--line);border-radius:16px;padding:14px 18px}
+#guide .routine b{display:block;font-size:20px;margin-bottom:4px}
+#guide kbd{display:inline-block;min-width:28px;padding:2px 8px;border-radius:7px;border:2px solid var(--line);background:var(--panel);font:600 15px/1.3 var(--font);text-align:center}
+#guide .vimg{width:38px;height:49px;border-radius:8px;object-fit:cover;display:block}
+#guide .pt{display:inline-block;width:14px;height:14px;border-radius:50%;margin-right:8px;vertical-align:-1px}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="bar" role="toolbar" aria-label="Kontrol guru">
+    <select id="jump" aria-label="Lompat ke bagian"></select>
+    <button id="bGuide" type="button">Panduan guru (G)</button>
+    <button id="bNotes" type="button" aria-pressed="false">Catatan (N)</button>
+    <button id="bSound" type="button" aria-pressed="true">Suara (S)</button>
+    <button id="bFull" type="button">Layar penuh (F)</button>
+  </div>
+
+  <div id="stage" aria-live="polite">
+    <div id="slide"></div>
+    <div id="tip" hidden></div>
+    <div id="nav">
+      <button class="nb" id="prev" type="button" aria-label="Sebelumnya">&#9664;</button>
+      <div id="prog"><div id="count"></div><div id="segs"></div></div>
+      <button class="nb" id="next" type="button" aria-label="Berikutnya">&#9654;</button>
+    </div>
+  </div>
+
+  <div id="guide" hidden></div>
+  <div id="toast" hidden></div>
+</div>
+
+<script>
+const IDS = ['dog','cat','bird','hamster','fish','rabbit','snake','tortoise','ferret','collar','brush','doglead','bowl','water','bed','kennel','pettoys','plants','rocks','seeds','food','cage','tank','woodshavings','temperature','play','vet'];
+const SRC = {}; IDS.forEach(k => SRC[k] = 'images/' + k + '.jpg');
+
+/* ============ DATA ============ */
+const ITEMS = {
+  dog:{word:'dog',line:"It's a dog.",color:'#CC1565',act:'gonggong “woof woof!”'},
+  cat:{word:'cat',line:"It's a cat.",color:'#F05A28',act:'cakar kecil “meow”'},
+  bird:{word:'bird',line:"It's a bird.",color:'#8B3F9B',act:'kepakkan tangan seperti sayap'},
+  hamster:{word:'hamster',line:"It's a hamster.",color:'#E6C200',act:'dua tangan kecil di dekat pipi'},
+  fish:{word:'fish',line:"It's a fish.",color:'#26BDBE',act:'tangan “berenang” meliuk'},
+  rabbit:{word:'rabbit',line:"It's a rabbit.",color:'#0080CC',act:'lompat-lompat kecil'},
+  snake:{word:'snake',line:"It's a snake.",color:'#F9B233',act:'tangan melata “sssss”'},
+  tortoise:{word:'tortoise',line:"It's a tortoise.",color:'#F58A2E',act:'berjalan sangat pelan'},
+  ferret:{word:'ferret',line:"It's a ferret.",color:'#00A651',act:'goyangkan badan memanjang'},
+  collar:{word:'collar',line:"It's a collar.",color:'#7AC143',act:'sentuh leher sendiri'},
+  brush:{word:'brush',line:"It's a brush.",color:'#9B9BD2',act:'pura-pura menyikat lengan'},
+  doglead:{word:'dog lead',line:"It's a dog lead.",color:'#00629F',act:'jalan di tempat sambil memegang tali'},
+  bowl:{word:'bowl',line:"It's a bowl.",color:'#6B4AA0',act:'tangkupkan dua tangan jadi mangkuk'},
+  bed:{word:'bed',line:"It's a bed.",color:'#E0293F',act:'pura-pura tidur'},
+  kennel:{word:'kennel',line:"It's a kennel.",color:'#E6C200',act:'dua tangan jadi atap rumah'},
+  pettoys:{word:'pet toys',line:"They're pet toys.",color:'#CC1565',act:'pura-pura melempar bola'},
+  cage:{word:'cage',line:"It's a cage.",color:'#0080CC',act:'jari-jari jadi jeruji'},
+  tank:{word:'tank',line:"It's a tank.",color:'#F9B233',act:'gambar kotak besar di udara'},
+  food:{word:'food',line:"It's food.",color:'#26BDBE',act:'pura-pura makan'},
+  seeds:{word:'seeds',line:"They're seeds.",color:'#E6C200',act:'jumput lalu tebar biji'},
+  water:{word:'water',line:"It's water.",color:'#F05A78',act:'pura-pura minum'},
+  woodshavings:{word:'wood shavings',line:"They're wood shavings.",color:'#F58A2E',act:'taburkan serutan kayu'},
+  plants:{word:'plants',line:"They're plants.",color:'#F05A28',act:'jongkok lalu berdiri seperti tumbuh'},
+  rocks:{word:'rocks',line:"They're rocks.",color:'#8B3F9B',act:'kepalkan tangan'},
+  temperature:{word:'temperature',line:"Check the temperature.",color:'#00A651',act:'sentuh dahi'},
+  play:{word:'play',line:"Let's play!",color:'#7AC143',act:'berlari kecil dan bermain'},
+  vet:{word:'vet',line:"Let's go to the vet.",color:'#9B9BD2',act:'pura-pura mendengar detak jantung'}
+};
+
+const PARTS = [
+  {n:1,title:'Pets',idn:'Hewan peliharaan',color:'#0080CC',
+   ids:['dog','cat','bird','hamster','fish','rabbit','snake','tortoise','ferret'],
+   quiz:[
+    {prompt:'Where is the cat?',answer:'cat',options:['dog','cat','fish']},
+    {prompt:'Where is the rabbit?',answer:'rabbit',options:['rabbit','bird','snake']},
+    {prompt:'Where is the tortoise?',answer:'tortoise',options:['hamster','ferret','tortoise']}
+   ]},
+  {n:2,title:'Pet things',idn:'Perlengkapan hewan',color:'#00A651',
+   ids:['collar','brush','doglead','bowl','bed','kennel','pettoys','cage','tank'],
+   quiz:[
+    {prompt:'Where is the bowl?',answer:'bowl',options:['bed','bowl','brush']},
+    {prompt:'Where is the dog lead?',answer:'doglead',options:['doglead','collar','pettoys']},
+    {prompt:'Where is the brush?',answer:'brush',options:['kennel','brush','bowl']},
+    {prompt:'Where does the hamster live?',show:'hamster',answer:'cage',options:['tank','kennel','cage'],ok:'Yes! The hamster lives in a cage.'},
+    {prompt:'Where does the fish live?',show:'fish',answer:'tank',options:['tank','cage','kennel'],ok:'Yes! The fish lives in a tank.'}
+   ]},
+  {n:3,title:'Food and care',idn:'Makanan & perawatan',color:'#CC1565',
+   ids:['food','seeds','water','woodshavings','plants','rocks','temperature','play','vet'],
+   quiz:[
+    {prompt:'Where is the vet?',answer:'vet',options:['play','temperature','vet']},
+    {prompt:'Where is the water?',answer:'water',options:['water','food','seeds']},
+    {prompt:'Where is the food?',answer:'food',options:['rocks','plants','food']},
+    {prompt:'What does the bird eat?',show:'bird',answer:'seeds',options:['rocks','seeds','woodshavings'],ok:'Yes! The bird eats seeds.'}
+   ]}
+];
+const PEEK = {n:4,title:'Peek-a-boo',idn:'Tebak gambar buram',color:'#8B3F9B',
+  ids:['fish','bowl','kennel','rabbit','food','tortoise']};
+
+/* ============ SUSUNAN SLIDE ============ */
+const slides = [];
+slides.push({type:'cover',g:0});
+slides.push({type:'warm',g:0});
+PARTS.forEach(p=>{
+  slides.push({type:'sec',part:p,g:p.n});
+  p.ids.forEach(id=>slides.push({type:'card',id,part:p,g:p.n}));
+  p.quiz.forEach(q=>slides.push(Object.assign({type:'quiz',part:p,g:p.n},q)));
+  slides.push({type:'wrap',part:p,g:p.n});
+});
+slides.push({type:'sec',part:PEEK,g:4,peek:true});
+PEEK.ids.forEach(id=>slides.push({type:'peek',id,part:PEEK,g:4}));
+slides.push({type:'fin',g:5});
+
+const GROUPS = [
+  {g:0,label:'Pembuka',color:'#1F7AE0'},
+  {g:1,label:'Part 1 · Pets',color:PARTS[0].color},
+  {g:2,label:'Part 2 · Pet things',color:PARTS[1].color},
+  {g:3,label:'Part 3 · Food and care',color:PARTS[2].color},
+  {g:4,label:'Peek-a-boo',color:PEEK.color},
+  {g:5,label:'Penutup',color:'#F9B233'}
+];
+GROUPS.forEach(G=>{
+  G.start = slides.findIndex(s=>s.g===G.g);
+  G.count = slides.filter(s=>s.g===G.g).length;
+});
+
+/* ============ UTIL ============ */
+const $ = s => document.querySelector(s);
+function h(tag,cls,html){const e=document.createElement(tag); if(cls) e.className=cls; if(html!=null) e.innerHTML=html; return e;}
+function photo(id,cls,extra){
+  return `<div class="ph ${cls||''}" style="--c:${ITEMS[id].color};${extra||''}"><img src="${SRC[id]}" alt="" draggable="false"></div>`;
+}
+function fs(word){const n=word.length; return n<=5?150:n<=7?128:n<=9?104:n<=11?88:72;}
+function mix(hex,t){ // campur warna dengan putih (t = porsi putih)
+  const n=parseInt(hex.slice(1),16), r=n>>16, g=(n>>8)&255, b=n&255;
+  const f=c=>Math.round(c+(255-c)*t);
+  return `rgb(${f(r)},${f(g)},${f(b)})`;
+}
+
+/* ============ SUARA ============ */
+let soundOn = true, voice = null, ac = null;
+const hasTTS = 'speechSynthesis' in window && typeof SpeechSynthesisUtterance !== 'undefined';
+function pickVoice(){
+  if(!hasTTS) return;
+  const vs = speechSynthesis.getVoices();
+  voice = vs.find(v=>/en[-_]US/i.test(v.lang) && /samantha|google us|zira|aria|jenny|female/i.test(v.name))
+       || vs.find(v=>/en[-_](US|GB)/i.test(v.lang)) || vs.find(v=>/^en/i.test(v.lang)) || null;
+}
+if(hasTTS){ pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
+function say(text,rate){
+  if(!soundOn || !hasTTS) return;
+  try{
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang='en-US'; if(voice) u.voice=voice; u.rate = rate||0.8; u.pitch=1.1;
+    speechSynthesis.speak(u);
+  }catch(e){}
+}
+function tone(freqs,dur,type,vol){
+  if(!soundOn) return;
+  try{
+    ac = ac || new (window.AudioContext||window.webkitAudioContext)();
+    let t = ac.currentTime;
+    freqs.forEach(f=>{
+      const o=ac.createOscillator(), g=ac.createGain();
+      o.type=type||'sine'; o.frequency.value=f;
+      g.gain.setValueAtTime(vol||.18,t); g.gain.exponentialRampToValueAtTime(.001,t+dur);
+      o.connect(g); g.connect(ac.destination); o.start(t); o.stop(t+dur);
+      t += dur*.7;
+    });
+  }catch(e){}
+}
+const chime = ()=>tone([660,880,1100],.28,'sine');
+const buzz  = ()=>tone([220],.25,'triangle',.12);
+
+let toastT=null;
+function toast(msg,ms){
+  const t=$('#toast'); t.textContent=msg; t.hidden=false;
+  clearTimeout(toastT); toastT=setTimeout(()=>t.hidden=true,ms||3500);
+}
+
+/* ============ PEMBANGUN SLIDE ============ */
+function tipText(html){return html;}
+
+function buildCover(){
+  const el=h('div','slide cover');
+  const fan=['dog','cat','rabbit','hamster','bird'].map((id,i)=>{
+    const pos=[[0,150,-12],[96,70,-6],[190,20,0],[290,70,6],[372,150,12]][i];
+    return photo(id,'', `left:${pos[0]}px;top:${pos[1]}px;transform:rotate(${pos[2]}deg);z-index:${i===2?5:i}`);
+  }).join('');
+  el.innerHTML=`<div class="cv-left"><h1>My Pets,<br>My Care</h1><p class="cv-sub">Let's meet our pets!</p>
+    <div class="chips"><span class="chip">Look</span><span class="chip">Say</span><span class="chip">Echo</span></div>
+    <button class="big go" type="button">Start</button></div><div class="fan">${fan}</div>`;
+  el.querySelector('.go').onclick=()=>next();
+  return {el,act:()=>next(),tip:()=>`<b>Pembuka</b> — Sambut anak: “Hello, everyone!” Jelaskan rutinitas: <i>Look</i> (lihat), <i>Say</i> (ucapkan), <i>Echo</i> (ulang 3× — whisper, normal, loud). Tekan OK atau ▶ untuk mulai.`};
+}
+
+function buildWarm(){
+  const el=h('div','slide warm');
+  const pos=[['dog',0,10,-5],['cat',250,40,5],['bird',30,300,4],['fish',270,320,-6]];
+  const grid=pos.map(p=>photo(p[0],'',`left:${p[1]}px;top:${p[2]}px;transform:rotate(${p[3]}deg)`)).join('');
+  el.innerHTML=`<div class="wl"><h2>Hello!</h2>
+    <div class="wrow"><div class="wq">Do you have a pet?</div></div>
+    <div class="wrow"><button class="spk" type="button" aria-label="Listen">🔊</button></div>
+    <div class="answers"><button type="button" data-t="Yes, I do.">Yes, I do.</button><button type="button" data-t="No, I don't.">No, I don't.</button></div></div>
+    <div class="grid">${grid}</div>`;
+  const q="Hello! Do you have a pet?";
+  el.querySelector('.spk').onclick=()=>say(q,.8);
+  el.querySelectorAll('.answers button').forEach(b=>b.onclick=()=>say(b.dataset.t,.8));
+  return {el,act:()=>say(q,.8),
+    tip:()=>`<b>Warm-up</b> — Tekan OK untuk memutar pertanyaan. Tanya tiap anak: “Do you have a pet?” Bantu jawab: “Yes, I do.” / “No, I don't.” Terima jawaban bahasa Indonesia, lalu ulangi dalam bahasa Inggris.`};
+}
+
+function thumbsHTML(ids,blur,small){
+  return `<div class="thumbs ${small?'small':''}">`+ids.map(id=>
+    `<div class="t">${photo(id,blur?'blur':'')}${blur?'':`<div class="w">${ITEMS[id].word}</div>`}</div>`).join('')+`</div>`;
+}
+
+function buildSec(s){
+  const p=s.part, el=h('div','slide sec');
+  const routine = s.peek ? `<span class="chip">Look</span><span class="chip">3 · 2 · 1</span><span class="chip">Say</span>`
+                         : `<span class="chip">Look</span><span class="chip">Say</span><span class="chip">Echo</span>`;
+  el.innerHTML=`<div class="sl"><div class="pn">${s.peek?'Game':'Part '+p.n}</div><h2>${p.title}</h2><div class="id">${p.idn}</div>
+    <div class="chips">${routine}</div><button class="big go" type="button">Let's go!</button></div>${thumbsHTML(p.ids,!!s.peek,true)}`;
+  el.querySelector('.go').onclick=()=>next();
+  const t = s.peek
+    ? `<b>Game Peek-a-boo</b> — Review kata yang sudah dipelajari. Gambar tampil buram: “What is it?” Anak menebak, lalu hitung mundur 3-2-1 dan gambar terbuka. Pakai di pertemuan terakhir atau sebagai review.`
+    : `<b>Part ${p.n}: ${p.title}</b> — Tunjuk thumbnail: “Look! Today we learn about ${p.title.toLowerCase()}.” Tiap kartu ±40 detik: Look → Say → Echo. Tekan ▶ untuk kartu pertama.`;
+  return {el,act:()=>next(),tip:()=>t};
+}
+
+function buildCard(s){
+  const it=ITEMS[s.id]; let st=0, dots=0, finished=false;
+  const el=h('div','slide card');
+  el.innerHTML=`${photo(s.id,'')}
+   <div class="rt">
+     <div class="q">What is it?<small>Look at the picture!</small></div>
+     <div class="rv" hidden>
+       <div class="word pop" style="font-size:${fs(it.word)}px">${it.word}</div>
+       <div class="bar"></div>
+       <div class="line">${it.line}</div>
+       <div class="dots">
+         <div class="dot"><span></span><span style="font-size:24px">whisper</span></div>
+         <div class="dot"><span></span><span style="font-size:30px">normal</span></div>
+         <div class="dot"><span></span><span style="font-size:38px">LOUD!</span></div>
+       </div>
+     </div>
+     <button class="spk" type="button" aria-label="Listen" hidden>🔊</button>
+     <div class="stars" hidden>⭐⭐⭐</div>
+     <button class="big act" type="button">Show the word</button>
+   </div>`;
+  const q=el.querySelector('.q'), rv=el.querySelector('.rv'), spk=el.querySelector('.spk'),
+        act=el.querySelector('.act'), stars=el.querySelector('.stars'), dd=[...el.querySelectorAll('.dot')];
+  function update(){
+    q.hidden = st>=1; rv.hidden = st<1; spk.hidden = st<1;
+    dd.forEach((d,i)=>d.classList.toggle('on',i<dots));
+    act.textContent = st===0 ? 'Show the word' : dots<3 ? 'Say it!' : 'Again';
+    stars.hidden = !finished;
+  }
+  function doAct(){
+    if(st===0){ st=1; say(it.word,.7); }
+    else if(dots<3){ dots++; if(dots===3){ finished=true; chime(); say(it.line,.8); stars.classList.remove('pop'); void stars.offsetWidth; stars.classList.add('pop'); } else say(it.word,.7); }
+    else say(it.line,.8);
+    update(); refreshTip();
+  }
+  act.onclick=doAct; el.querySelector('.ph').onclick=doAct;
+  spk.onclick=()=>say(it.word,.7);
+  update();
+  return {el,act:doAct,tip:()=>{
+    if(st===0) return `<b>① Look</b> — Tunjuk gambar dan tanya “What is it?” Beri 3 detik; terima tebakan anak (boleh bahasa Indonesia). Gerakan (TPR): ${it.act}.`;
+    if(dots===0) return `<b>② Say</b> — Ucapkan “${it.word}” dengan pelan, anak menirukan: “Listen… ${it.word}. Say: ${it.word}!” Lalu tekan OK (Say it!).`;
+    if(dots<3) return `<b>③ Echo</b> — Ulang 3×: <i>whisper</i> → <i>normal</i> → <i>LOUD</i>. Tekan OK setiap anak selesai mengulang (${dots}/3). Gerakan: ${it.act}.`;
+    return `<b>Bagus!</b> Tepuk tangan bersama, lalu ucapkan kalimat: “${it.line}” Lanjut ke kartu berikutnya dengan ▶.`;
+  }};
+}
+
+function buildPeek(s){
+  const it=ITEMS[s.id]; let st=0, timer=null;
+  const el=h('div','slide card peek');
+  el.innerHTML=`${photo(s.id,'blur')}
+   <div class="rt">
+     <div class="q">What is it?<small>Guess! Then we peek.</small></div>
+     <div class="cnt count pop" hidden>3</div>
+     <div class="rv" hidden>
+       <div class="word pop" style="font-size:${fs(it.word)}px">${it.word}</div>
+       <div class="bar"></div>
+       <div class="line">${it.line}</div>
+     </div>
+     <button class="spk" type="button" aria-label="Listen" hidden>🔊</button>
+     <button class="big act" type="button">Peek!</button>
+   </div>`;
+  const ph=el.querySelector('.ph'), q=el.querySelector('.q'), cnt=el.querySelector('.cnt'),
+        rv=el.querySelector('.rv'), spk=el.querySelector('.spk'), act=el.querySelector('.act');
+  function reveal(){
+    st=2; ph.classList.remove('blur'); cnt.hidden=true; rv.hidden=false; spk.hidden=false; q.hidden=true;
+    act.textContent='Again'; act.hidden=false; chime(); setTimeout(()=>say(it.word+'. '+it.line,.75),350); refreshTip();
+  }
+  function start(){
+    st=1; q.hidden=true; cnt.hidden=false; act.hidden=true; refreshTip();
+    let n=3; cnt.textContent=n; say(String(n),.9);
+    timer=setInterval(()=>{
+      n--;
+      if(n<=0){ clearInterval(timer); timer=null; reveal(); }
+      else { cnt.textContent=n; cnt.classList.remove('pop'); void cnt.offsetWidth; cnt.classList.add('pop'); say(String(n),.9); }
+    },950);
+  }
+  function doAct(){ if(st===0) start(); else if(st===2) say(it.word+'. '+it.line,.75); }
+  act.onclick=doAct; ph.onclick=doAct; spk.onclick=()=>say(it.word,.7);
+  return {el,act:doAct,destroy:()=>{if(timer) clearInterval(timer);},tip:()=>{
+    if(st===0) return `<b>Tebak dulu</b> — Gambar buram: “What is it?” Beri anak 3–5 detik menebak (boleh bahasa Indonesia), lalu tekan OK untuk hitung mundur.`;
+    if(st===1) return `<b>3 · 2 · 1</b> — Hitung bersama dengan jari: “Three… two… one!”`;
+    return `<b>Cek jawaban</b> — “It's ${it.word==='food'||it.word==='dog lead'?'':'a '}${it.word}!” Anak mengulang 1×. Gerakan: ${it.act}.`;
+  }};
+}
+
+function buildQuiz(s){
+  const el=h('div','slide quiz'); let solved=false;
+  const target=s.answer;
+  const okText = s.ok || ('Yes! '+ITEMS[target].line);
+  el.innerHTML=`<div class="qrow">${s.show?photo(s.show,''):''}<div class="qp${s.prompt.length>24?' long':''}">${s.prompt}</div><button class="spk" type="button" aria-label="Listen">🔊</button></div>
+    <div class="opts">${s.options.map((id,i)=>`<button class="opt" type="button" data-i="${i}" style="--c:${ITEMS[id].color}" aria-label="Pilihan ${i+1}"><img src="${SRC[id]}" alt="" draggable="false"><span class="num">${i+1}</span><span class="lab" hidden>${ITEMS[id].word}</span></button>`).join('')}</div>`;
+  const opts=[...el.querySelectorAll('.opt')];
+  function pick(i){
+    if(solved||!opts[i]) return;
+    const id=s.options[i];
+    if(id===target){
+      solved=true; el.classList.add('done'); opts[i].classList.add('good'); opts[i].querySelector('.lab').hidden=false;
+      chime(); say(okText,.85); $('#next').classList.add('nudge'); refreshTip();
+    } else {
+      opts[i].classList.remove('bad'); void opts[i].offsetWidth; opts[i].classList.add('bad'); buzz(); say('Try again!',.9);
+    }
+  }
+  opts.forEach((b,i)=>b.onclick=()=>pick(i));
+  el.querySelector('.spk').onclick=()=>say(s.prompt,.8);
+  const t=setTimeout(()=>say(s.prompt,.8),500);
+  return {el,pick,act:()=>say(s.prompt,.8),destroy:()=>clearTimeout(t),tip:()=>{
+    if(solved) return `<b>Benar!</b> Beri pujian “Good job!” dan tepuk tangan. Minta anak mengulang kalimat: “${okText.replace('Yes! ','')}” Lanjut dengan ▶.`;
+    return `<b>Kuis klik</b> — Bacakan: “${s.prompt}” Anak maju menunjuk gambar di TV, guru klik (atau tekan angka 1–3 pada remote/keyboard). Jika salah: “Try again!” — tanpa hukuman.`;
+  }};
+}
+
+function buildWrap(s){
+  const p=s.part, el=h('div','slide wrap');
+  el.innerHTML=`<div class="wl"><h2>Good job!</h2><p>Today we learned about ${p.title.toLowerCase()}.</p>
+    <button class="big act" type="button">Bye-bye!</button></div>${thumbsHTML(p.ids,false,true)}`;
+  const say1=()=>{ chime(); say('Good job! Bye bye!',.8); };
+  el.querySelector('.act').onclick=say1;
+  return {el,act:say1,tip:()=>`<b>Penutup Part ${p.n}</b> — Rayakan dengan tepuk tangan. Tunjuk tiap thumbnail dan minta anak menyebut katanya. Lalu lambaikan tangan: “Bye-bye!” Jika ini akhir pertemuan, berhenti di sini.`};
+}
+
+function buildFin(){
+  const el=h('div','slide fin');
+  el.innerHTML=`<div class="wl"><h2>Great job!</h2><div class="st pop">⭐⭐⭐</div>
+    <div class="sent">Pets need food, water, and a bed.</div>
+    <div class="row">${['food','water','bed'].map(id=>photo(id,'')).join('')}</div>
+    <div class="btns"><button class="big act" type="button">Listen 🔊</button><button class="big alt again" type="button">Again</button></div></div>`;
+  const line='Great job! Pets need food, water, and a bed.';
+  const go=()=>{ chime(); say(line,.8); };
+  el.querySelector('.act').onclick=go;
+  el.querySelector('.again').onclick=()=>show(0);
+  return {el,act:go,tip:()=>`<b>Penutup akhir</b> — Ucapkan kalimat bersama anak: “Pets need food, water, and a bed.” Beri bintang/stiker, lalu “See you next time!”`};
+}
+
+const BUILD={cover:buildCover,warm:buildWarm,sec:buildSec,card:buildCard,peek:buildPeek,quiz:buildQuiz,wrap:buildWrap,fin:buildFin};
+
+/* ============ KONTROL DECK ============ */
+let cur=0, active=null, notesOn=false;
+const stage=$('#stage'), host=$('#slide'), tipEl=$('#tip');
+
+function colorFor(s){
+  if(s.type==='card'||s.type==='peek') return ITEMS[s.id].color;
+  if(s.part) return s.part.color;
+  return '#1F7AE0';
+}
+function refreshTip(){
+  if(!active) return;
+  tipEl.hidden=!notesOn;
+  if(notesOn) tipEl.innerHTML=active.tip();
+}
+function buildSegs(){
+  const segs=$('#segs'); segs.innerHTML='';
+  GROUPS.forEach(G=>{
+    const d=h('div','seg'); d.style.flex=String(G.count); d.style.setProperty('--sc',G.color);
+    d.innerHTML='<i style="width:0%"></i>'; d.dataset.g=G.g; segs.appendChild(d);
+  });
+}
+function updateChrome(){
+  const s=slides[cur], col=colorFor(s);
+  stage.style.setProperty('--accent',col);
+  stage.style.setProperty('--tint',mix(col,.88));
+  const G=GROUPS.find(x=>x.g===s.g);
+  $('#count').textContent = `${G.label}  ·  ${cur+1} / ${slides.length}`;
+  [...$('#segs').children].forEach(d=>{
+    const g=Number(d.dataset.g), GG=GROUPS[g];
+    const pct = cur>=GG.start+GG.count ? 100 : cur<GG.start ? 0 : ((cur-GG.start+1)/GG.count*100);
+    d.firstChild.style.width=pct+'%';
+  });
+  $('#prev').disabled = cur===0;
+  $('#next').disabled = cur===slides.length-1;
+  $('#next').classList.remove('nudge');
+  $('#jump').value=String(G.g);
+}
+function show(i){
+  if(hasTTS) try{speechSynthesis.cancel();}catch(e){}
+  if(active && active.destroy) active.destroy();
+  cur=Math.max(0,Math.min(slides.length-1,i));
+  const s=slides[cur];
+  active=BUILD[s.type](s);
+  host.replaceChildren(active.el);
+  updateChrome(); refreshTip();
+}
+function next(){ if(cur<slides.length-1) show(cur+1); }
+function prev(){ if(cur>0) show(cur-1); }
+
+/* ============ PANDUAN GURU ============ */
+const KEYS=[
+  ['▶ / Page Down','Slide berikutnya'],['◀ / Page Up / Backspace','Slide sebelumnya'],
+  ['OK / Enter / Spasi','Aksi utama di slide (tampilkan kata, ulangi, putar suara)'],
+  ['1 · 2 · 3','Pilih jawaban pada slide kuis'],['G','Buka / tutup panduan guru'],
+  ['N','Tampilkan / sembunyikan catatan guru di layar'],['S','Suara hidup / mati'],['F','Layar penuh'],['Home','Kembali ke sampul']
+];
+const STEPS=[
+  ['1','2 mnt','Warm-up','Sambut anak, tekan OK untuk memutar “Do you have a pet?” Tanya tiap anak.','Hello! Do you have a pet? · Yes, I do. · No, I don\'t.'],
+  ['2','5–6 mnt','Slide bagian + 9 kartu','Tiap kartu: <b>Look</b> (tebak) → <b>Say</b> (ucapkan) → <b>Echo</b> 3× (whisper, normal, loud) sambil gerakan TPR.','What is it? · It\'s a ___. · Listen… Say: ___!'],
+  ['3','3 mnt','Kuis klik','Bacakan pertanyaan; anak menunjuk gambar di TV, guru klik. Salah tidak apa-apa, ulangi.','Where is the ___? · Try again! · Yes! It\'s a ___.'],
+  ['4','1 mnt','Penutup bagian','Tepuk tangan, anak menyebut kata-kata dari thumbnail, lambaikan tangan.','Good job! · Bye-bye!'],
+  ['5','3 mnt','Peek-a-boo (opsional)','Gambar buram, anak menebak, hitung 3-2-1, gambar terbuka. Cocok untuk review.','What is it? · Three, two, one!']
+];
+const SPLIT=[
+  ['Pertemuan 1','Warm-up + Part 1 (Pets) + kuis 1 + penutup','±12 menit'],
+  ['Pertemuan 2','Review 3 kartu Part 1 + Part 2 (Pet things) + kuis 2 (termasuk “Where does the hamster live?”)','±14 menit'],
+  ['Pertemuan 3','Part 3 (Food and care) + kuis 3 + Peek-a-boo + penutup akhir','±15 menit']
+];
+function buildGuide(){
+  const g=$('#guide');
+  const jumps=GROUPS.map(G=>`<button type="button" data-go="${G.start}"><span class="pt" style="background:${G.color}"></span>${G.label}</button>`).join('');
+  const vocab=PARTS.map(p=>`<h2><span class="pt" style="background:${p.color}"></span>Part ${p.n} · ${p.title} <span class="muted" style="font-weight:400;font-size:18px">(${p.idn})</span></h2>
+    <div class="tw"><table><thead><tr><th></th><th>Kata</th><th>Kalimat</th><th>Gerakan (TPR)</th></tr></thead><tbody>${
+      p.ids.map(id=>`<tr><td><img class="vimg" src="${SRC[id]}" alt=""></td><td><b>${ITEMS[id].word}</b></td><td>${ITEMS[id].line}</td><td>${ITEMS[id].act}</td></tr>`).join('')
+    }</tbody></table></div>`).join('');
+  g.innerHTML=`<button class="close" type="button">← Kembali ke slide</button><div class="gi">
+    <h1>My Pets, My Care</h1>
+    <p class="muted">Panduan mengajar step by step · pre-school · ditampilkan di Smart TV</p>
+    <p><b>Tujuan:</b> anak mengenali dan mengucapkan 27 kata (9 hewan peliharaan, 9 perlengkapan, 9 makanan &amp; perawatan) serta mengerti pola <i>“It's a ___.”</i> dan <i>“Where is the ___?”</i> lewat melihat, menunjuk, dan menirukan.</p>
+    <div class="jump">${jumps}</div>
+
+    <h2>Rutinitas tiap kartu: Look → Say → Echo</h2>
+    <div class="routine">
+      <div><b>① Look</b>Tampilkan gambar, tanya “What is it?” Beri 3 detik. Terima tebakan bahasa Indonesia, lalu ulangi dalam bahasa Inggris.</div>
+      <div><b>② Say</b>Tekan OK: kata muncul dan terdengar. Guru: “Listen… dog. Say: dog!”</div>
+      <div><b>③ Echo</b>Ulang 3×: <i>whisper</i> (pelan), <i>normal</i>, <i>LOUD</i> (keras) sambil gerakan TPR. Tekan OK tiap ulangan; setelah 3× muncul bintang.</div>
+    </div>
+
+    <h2>Alur satu sesi</h2>
+    <div class="tw"><table><thead><tr><th>#</th><th>Waktu</th><th>Layar</th><th>Yang dilakukan guru</th><th>Kalimat guru</th></tr></thead><tbody>${
+      STEPS.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td>${r[4]}</td></tr>`).join('')
+    }</tbody></table></div>
+
+    <h2>Saran pembagian 3 pertemuan</h2>
+    <p class="muted">Anak pre-school fokus sekitar 10–15 menit, jadi satu bagian per pertemuan lebih nyaman daripada semuanya sekaligus.</p>
+    <div class="tw"><table><thead><tr><th>Pertemuan</th><th>Isi</th><th>Durasi</th></tr></thead><tbody>${
+      SPLIT.map(r=>`<tr><td><b>${r[0]}</b></td><td>${r[1]}</td><td>${r[2]}</td></tr>`).join('')
+    }</tbody></table></div>
+
+    <h2>Tombol &amp; remote</h2>
+    <div class="tw"><table><thead><tr><th>Tombol</th><th>Fungsi</th></tr></thead><tbody>${
+      KEYS.map(k=>`<tr><td><kbd>${k[0]}</kbd></td><td>${k[1]}</td></tr>`).join('')
+    }</tbody></table></div>
+    <p class="muted">Semua tombol di layar juga bisa disentuh atau diklik dengan mouse / air remote.</p>
+
+    <h2>Tips Smart TV</h2>
+    <ul>
+      <li>Buka tautan halaman ini di browser Smart TV, lalu tekan <kbd>F</kbd> atau tombol “Layar penuh”. Tampilan otomatis menyesuaikan layar 16:9.</li>
+      <li>Suara memakai fitur ucapan bawaan browser. Jika di TV tidak berbunyi, tombol “Suara” akan tetap aktif tetapi tanpa audio: guru membacakan sendiri, atau sambungkan laptop ke TV lewat HDMI / Chromecast / AirPlay.</li>
+      <li>Untuk membaca catatan guru tanpa terlihat anak, buka halaman ini di HP atau laptop (catatan <kbd>N</kbd>) sambil layar TV mencerminkan laptop tanpa catatan.</li>
+      <li>Duduk anak minimal 2 meter dari TV. Teks dan gambar sudah dibuat besar dan kontras tinggi.</li>
+    </ul>
+    <div class="jump"><button type="button" id="gTest">Tes suara</button></div>
+
+    <h2>Daftar kata, kalimat &amp; gerakan</h2>
+    ${vocab}
+    <p class="muted" style="margin-top:34px">Gambar flashcard berasal dari berkas PDF yang Anda unggah (Twinkl). Gunakan untuk kegiatan kelas sesuai ketentuan lisensinya.</p>
+  </div>`;
+  g.querySelector('.close').onclick=closeGuide;
+  g.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>{ closeGuide(); show(Number(b.dataset.go)); });
+  g.querySelector('#gTest').onclick=()=>{ if(!hasTTS) toast('Browser ini tidak mendukung suara otomatis. Guru membacakan sendiri.'); else say('Hello! This is a sound test.',.85); };
+}
+function openGuide(){ $('#guide').hidden=false; $('#guide').scrollTop=0; }
+function closeGuide(){ $('#guide').hidden=true; }
+const guideOpen=()=>!$('#guide').hidden;
+
+/* ============ TOMBOL TOOLBAR ============ */
+function setNotes(on){ notesOn=on; $('#bNotes').setAttribute('aria-pressed',String(on)); refreshTip(); }
+function setSound(on){
+  soundOn=on; $('#bSound').setAttribute('aria-pressed',String(on));
+  if(!on && hasTTS) try{speechSynthesis.cancel();}catch(e){}
+  else if(on && !hasTTS) toast('Browser ini tidak mendukung suara otomatis. Guru membacakan sendiri.');
+}
+function fullscreen(){
+  const app=$('#app');
+  const req=app.requestFullscreen||app.webkitRequestFullscreen;
+  const exit=document.exitFullscreen||document.webkitExitFullscreen;
+  try{
+    if(document.fullscreenElement||document.webkitFullscreenElement) exit.call(document);
+    else if(req) req.call(app); else toast('Layar penuh tidak tersedia. Gunakan mode layar penuh dari TV/browser.');
+  }catch(e){ toast('Layar penuh tidak tersedia. Gunakan mode layar penuh dari TV/browser.'); }
+}
+function fit(){
+  const r=$('#app').getBoundingClientRect();
+  const s=Math.min(r.width/1280,r.height/720);
+  stage.style.transform=`translate(-50%,-50%) scale(${s})`;
+}
+
+/* ============ INISIALISASI ============ */
+const jump=$('#jump');
+GROUPS.forEach(G=>{ const o=document.createElement('option'); o.value=String(G.g); o.textContent=G.label; jump.appendChild(o); });
+jump.onchange=()=>{ show(GROUPS[Number(jump.value)].start); jump.blur(); };
+$('#prev').onclick=prev; $('#next').onclick=next;
+$('#bGuide').onclick=()=>guideOpen()?closeGuide():openGuide();
+$('#bNotes').onclick=()=>setNotes(!notesOn);
+$('#bSound').onclick=()=>setSound(!soundOn);
+$('#bFull').onclick=fullscreen;
+
+document.addEventListener('click',e=>{
+  const b=e.target.closest('button');
+  if(b && !b.closest('#guide')) setTimeout(()=>b.blur(),0);
+});
+window.addEventListener('keydown',e=>{
+  if(e.ctrlKey||e.metaKey||e.altKey) return;
+  const tag=(document.activeElement&&document.activeElement.tagName)||'';
+  if(tag==='SELECT') return;
+  const k=e.key;
+  if(k==='g'||k==='G'){ guideOpen()?closeGuide():openGuide(); return; }
+  if(k==='Escape'){ if(guideOpen()) closeGuide(); return; }
+  if(guideOpen()) return;
+  if(k==='ArrowRight'||k==='PageDown'){ e.preventDefault(); next(); }
+  else if(k==='ArrowLeft'||k==='PageUp'||k==='Backspace'){ e.preventDefault(); prev(); }
+  else if(k==='Home'){ show(0); }
+  else if(k==='n'||k==='N'){ setNotes(!notesOn); }
+  else if(k==='s'||k==='S'){ setSound(!soundOn); }
+  else if(k==='f'||k==='F'){ fullscreen(); }
+  else if(k==='1'||k==='2'||k==='3'){ if(active&&active.pick) active.pick(Number(k)-1); }
+  else if(k==='Enter'||k===' '){
+    if(tag==='BUTTON') return;          // biarkan tombol terfokus yang bekerja
+    e.preventDefault(); if(active) active.act();
+  }
+});
+
+let idleT=null;
+function wake(){ $('#bar').classList.remove('idle'); clearTimeout(idleT); idleT=setTimeout(()=>$('#bar').classList.add('idle'),4000); }
+['mousemove','keydown','touchstart','click'].forEach(ev=>window.addEventListener(ev,wake,{passive:true}));
+
+new ResizeObserver(fit).observe($('#app'));
+window.addEventListener('resize',fit);
+buildSegs(); buildGuide(); fit(); show(0); wake();
+if(!hasTTS) setTimeout(()=>toast('Browser ini tidak mendukung suara otomatis. Guru membacakan kata secara langsung.',5000),800);
+</script>
+</body>
+</html>
